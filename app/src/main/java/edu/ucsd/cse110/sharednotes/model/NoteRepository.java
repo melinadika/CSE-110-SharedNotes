@@ -1,5 +1,7 @@
 package edu.ucsd.cse110.sharednotes.model;
 
+import android.util.Log;
+
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MediatorLiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -47,6 +49,8 @@ public class NoteRepository {
             if (ourNote == null || ourNote.updatedAt < theirNote.updatedAt) {
                 upsertLocal(theirNote);
             }
+            try {
+                Log.i("SYNC", note.getValue().content); } catch (Exception e) {};
         };
 
         // If we get a local update, pass it on.
@@ -99,8 +103,14 @@ public class NoteRepository {
         MutableLiveData<Note> curNote = new MutableLiveData<>();
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        this.future = executor.scheduleAtFixedRate(() ->
-           curNote.postValue(noteAPI.getNote(title)), 1, 3, TimeUnit.SECONDS);
+        this.future = executor.scheduleAtFixedRate(() -> {
+           curNote.postValue(noteAPI.getNote(title));
+           try{ Log.i("REPO", curNote.getValue().content); }
+           catch(Exception e) {}
+           }, 1, 3, TimeUnit.SECONDS);
+        //Log.i("REPO", "test");
+       //
+
         // Start by fetching the note from the server _once_ and feeding it into MutableLiveData.
         // Then, set up a background thread that will poll the server every 3 seconds.
 
