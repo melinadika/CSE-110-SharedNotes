@@ -14,9 +14,9 @@ import java.util.concurrent.TimeUnit;
 public class NoteRepository {
     private final NoteDao dao;
 
-    private ScheduledFuture<?> thisClassIsBad;
+    private ScheduledFuture<?> future;
 
-    private NoteAPI noteAPI;
+    private final NoteAPI noteAPI;
 
 
     public NoteRepository(NoteDao dao) {
@@ -93,14 +93,14 @@ public class NoteRepository {
         // TODO: Implement getRemote!
         // TODO: Set up polling background thread (MutableLiveData?)
         // TODO: Refer to TimerService from https://github.com/DylanLukes/CSE-110-WI23-Demo5-V2.
-        if(thisClassIsBad != null) {
-            thisClassIsBad.cancel(true);
+        if(future != null) {
+            future.cancel(true);
         }
         MutableLiveData<Note> curNote = new MutableLiveData<>();
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
-        this.thisClassIsBad = executor.scheduleAtFixedRate(() -> {
-           curNote.postValue(noteAPI.getNote(title));}, 0, 3, TimeUnit.SECONDS);
+        this.future = executor.scheduleAtFixedRate(() ->
+           curNote.postValue(noteAPI.getNote(title)), 1, 3, TimeUnit.SECONDS);
         // Start by fetching the note from the server _once_ and feeding it into MutableLiveData.
         // Then, set up a background thread that will poll the server every 3 seconds.
 

@@ -4,6 +4,8 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import java.util.Map;
+
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -62,12 +64,12 @@ public class NoteAPI {
                 .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
                 .method("GET", null)
                 .build();
-
+        Gson gson = new Gson();
         try (var response = client.newCall(request).execute()) {
             assert response.body() != null;
             var body = response.body().string();
             Log.i("GET NOTE", body);
-            return new Note(title, body);
+            return gson.fromJson(body, Note.class);
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -75,21 +77,25 @@ public class NoteAPI {
     }
 
     public void putNote(Note note) {
-        String title = note.title.replace(" ", "%20");
+        Gson gson = new Gson();
+        String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.updatedAt));
+        RequestBody reqBody = RequestBody.create(noteJSON, JSON);
+        Log.i("PUT NOTE", reqBody.toString());
+        Thread putThread = new Thread(() -> {
+            String title = note.title.replace(" ", "%20");
+            var request = new Request.Builder()
+                    .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
+                    .method("PUT", reqBody)
+                    .build();
+            try (var response = client.newCall(request).execute()) {
+                assert response.body() != null;
+                var body = response.body().string();
+                Log.i("PUT NOTE", body);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
 
-        RequestBody reqBody = RequestBody.create(note.content, JSON);
-
-        var request = new Request.Builder()
-                .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
-                .method("PUT", reqBody)
-                .build();
-
-        try (var response = client.newCall(request).execute()) {
-            assert response.body() != null;
-            var body = response.body().string();
-            Log.i("PUT NOTE", body);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        });
+        putThread.start();
     }
 }

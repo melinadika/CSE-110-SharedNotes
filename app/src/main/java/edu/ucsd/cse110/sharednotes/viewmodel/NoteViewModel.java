@@ -11,7 +11,6 @@ import edu.ucsd.cse110.sharednotes.model.NoteDatabase;
 import edu.ucsd.cse110.sharednotes.model.NoteRepository;
 
 public class NoteViewModel extends AndroidViewModel {
-    private LiveData<Note> note;
     private final NoteRepository repo;
 
     public NoteViewModel(@NonNull Application application) {
@@ -36,7 +35,6 @@ public class NoteViewModel extends AndroidViewModel {
 
     public void save(Note note) {
         // TODO: try to upload the note to the server.
-        repo.upsertLocal(note);
-        repo.upsertRemote(note);
+        repo.upsertSynced(note);
     }
 }

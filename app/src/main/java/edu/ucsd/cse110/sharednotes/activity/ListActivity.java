@@ -98,6 +98,8 @@ public class ListActivity extends AppCompatActivity {
         var adapter = setupAdapter(viewModel);
 
         setupViews(viewModel, adapter);
+
+
     }
 
     private ListViewModel setupViewModel() {
