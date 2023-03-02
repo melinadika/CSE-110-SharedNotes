@@ -3,7 +3,6 @@ package edu.ucsd.cse110.sharednotes.model;
 import android.util.Log;
 
 import androidx.annotation.AnyThread;
-import androidx.annotation.MainThread;
 import androidx.annotation.WorkerThread;
 
 import com.google.gson.Gson;
@@ -83,7 +82,7 @@ public class NoteAPI {
         try (var response = client.newCall(request).execute()) {
             assert response.body() != null;
             var body = response.body().string();
-            Log.i("GET NOTE", gson.fromJson(body, Note.class).content);
+            Log.i("GET NOTE", body);
             return gson.fromJson(body, Note.class);
         } catch (Exception e) {
             e.printStackTrace();

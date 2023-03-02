@@ -51,7 +51,7 @@ public class NoteRepository {
                 upsertLocal(theirNote);
             }
             try {
-                Log.i("SYNC", note.getValue().content); } catch (Exception e) {};
+                Log.i("SYNC", note.getValue().content + note.getValue().updatedAt); } catch (Exception e) {};
         };
 
         // If we get a local update, pass it on.
@@ -79,7 +79,7 @@ public class NoteRepository {
     }
 
     public void upsertLocal(Note note) {
-        note.updatedAt = System.currentTimeMillis();
+        note.updatedAt = System.currentTimeMillis()/1000;
         dao.upsert(note);
     }
 
@@ -106,7 +106,7 @@ public class NoteRepository {
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         this.future = executor.scheduleAtFixedRate(() -> {
            curNote.postValue(noteAPI.getNote(title));
-           try{ Log.i("REPO", curNote.getValue().content); }
+           try{ Log.i("REPO", curNote.getValue().content + curNote.getValue().updatedAt); }
            catch(Exception e) {}
            }, 1, 3, TimeUnit.SECONDS);
         //Log.i("REPO", "test");
