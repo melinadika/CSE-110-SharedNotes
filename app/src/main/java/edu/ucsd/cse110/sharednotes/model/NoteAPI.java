@@ -78,20 +78,34 @@ public class NoteAPI {
                 .url("https://sharednotes.goto.ucsd.edu/notes/" + title)
                 .method("GET", null)
                 .build();
+
         Gson gson = new Gson();
+
         try (var response = client.newCall(request).execute()) {
+
             assert response.body() != null;
             var body = response.body().string();
             Log.i("GET NOTE", body);
-            return gson.fromJson(body, Note.class);
+            Note toReturn = gson.fromJson(body, Note.class);
+
+
+            if(toReturn.title == null){
+                toReturn = null;
+            }
+
+
+            return toReturn;
+
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         return null;
     }
 
     public void putNote(Note note) {
         Gson gson = new Gson();
+//        String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.updatedAt));
         String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.updatedAt));
         RequestBody reqBody = RequestBody.create(noteJSON, JSON);
         Log.i("PUT NOTE", reqBody.toString());

@@ -24,19 +24,33 @@ public class NoteViewModel extends AndroidViewModel {
 
     public LiveData<Note> getNote(String title) {
         // TODO: use getSynced here instead?
+
         // The returned live data should update whenever there is a change in
         // the database, or when the server returns a newer version of the note.
         // Polling interval: 3s.
-        if (note == null) {
-            note = repo.getRemote(title);
-        } else {
-            note = repo.getSynced(title);;
+
+        /*
+         * Currently if note does not exist, then it
+         */
+//        if (note == null) {
+//            note = repo.getRemote(title);
+//        } else {
+//            note = repo.getSynced(title);
+//        }
+//        return note;
+
+        if(note == null) {
+            note = repo.getSynced(title);
         }
+
         return note;
+
     }
 
     public void save(Note note) {
         // TODO: try to upload the note to the server.
+        note.updatedAt = System.currentTimeMillis()/1000; // Added to add timestamp to last update.
+
         repo.upsertSynced(note);
     }
 }
