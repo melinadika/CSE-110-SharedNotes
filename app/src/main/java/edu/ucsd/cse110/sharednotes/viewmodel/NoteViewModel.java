@@ -12,6 +12,7 @@ import edu.ucsd.cse110.sharednotes.model.NoteRepository;
 
 public class NoteViewModel extends AndroidViewModel {
     private final NoteRepository repo;
+    private LiveData<Note> note;
 
     public NoteViewModel(@NonNull Application application) {
         super(application);
@@ -26,11 +27,12 @@ public class NoteViewModel extends AndroidViewModel {
         // The returned live data should update whenever there is a change in
         // the database, or when the server returns a newer version of the note.
         // Polling interval: 3s.
-        return repo.getSynced(title);
-//        if (note == null) {
-//            note = repo.getLocal(title);
-//        }
-//        return note;
+        if (note == null) {
+            note = repo.getRemote(title);
+        } else {
+            note = repo.getSynced(title);;
+        }
+        return note;
     }
 
     public void save(Note note) {
