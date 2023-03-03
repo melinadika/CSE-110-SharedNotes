@@ -20,7 +20,7 @@ import okhttp3.RequestBody;
 public class NoteAPI {
     // TODO: Implement the API using OkHttp!
     // TODO: - getNote (maybe getNoteAsync)
-    // TODO: - putNote (don't need putNotAsync, probably)
+    // TODO: - putNote (don't need putNoteAsync, probably)
     // TODO: Read the docs: https://square.github.io/okhttp/
     // TODO: Read the docs: https://sharednotes.goto.ucsd.edu/docs
 
@@ -88,13 +88,15 @@ public class NoteAPI {
             Log.i("GET NOTE", body);
             Note toReturn = gson.fromJson(body, Note.class);
 
-
-            if(toReturn.title == null){
-                toReturn = null;
-            }
-
-
             return toReturn;
+
+//
+//            if(toReturn.title == null){
+//                return null;
+//            }
+//
+//
+//            return toReturn;
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -106,7 +108,9 @@ public class NoteAPI {
     public void putNote(Note note) {
         Gson gson = new Gson();
 //        String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.updatedAt));
-        String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.updatedAt));
+        //String noteJSON = gson.toJson(Map.of("content", note.content, "updated_at", note.version));
+
+        String noteJSON = note.toJSON();
         RequestBody reqBody = RequestBody.create(noteJSON, JSON);
         Log.i("PUT NOTE", reqBody.toString());
         Thread putThread = new Thread(() -> {
@@ -131,6 +135,15 @@ public class NoteAPI {
     public Future<String> echoAsync(String msg) {
         var executor = Executors.newSingleThreadExecutor();
         var future = executor.submit(() -> echo(msg));
+
+        // We can use future.get(1, SECONDS) to wait for the result.
+        return future;
+    }
+
+    @AnyThread
+    public Future<Note> getNoteAsync(String title) {
+        var executor = Executors.newSingleThreadExecutor();
+        var future = executor.submit(() -> getNote(title));
 
         // We can use future.get(1, SECONDS) to wait for the result.
         return future;

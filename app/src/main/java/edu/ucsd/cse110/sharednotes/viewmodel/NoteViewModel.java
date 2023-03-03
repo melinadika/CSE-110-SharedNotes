@@ -49,8 +49,7 @@ public class NoteViewModel extends AndroidViewModel {
 
     public void save(Note note) {
         // TODO: try to upload the note to the server.
-        note.updatedAt = System.currentTimeMillis()/1000; // Added to add timestamp to last update.
-
+        note.version++;
         repo.upsertSynced(note);
     }
 }

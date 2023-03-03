@@ -8,10 +8,12 @@ import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.Observer;
 
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 public class NoteRepository {
     private final NoteDao dao;
@@ -25,7 +27,7 @@ public class NoteRepository {
 
     public NoteRepository(NoteDao dao) {
         this.dao = dao;
-        noteAPI = NoteAPI.provide();
+        noteAPI = NoteAPI.provide(); //Might have to move?
 
     }
 
@@ -44,17 +46,17 @@ public class NoteRepository {
      * @return a LiveData object that will be updated when the note is updated locally or remotely.
      */
     public LiveData<Note> getSynced(String title) {
-        MediatorLiveData<Note> note = new MediatorLiveData<>();
+        var note = new MediatorLiveData<Note>();
 
         Observer<Note> updateFromRemote = (theirNote) -> {
             var ourNote = note.getValue();
             if (theirNote == null) { return; } // do nothing
-            if (ourNote == null || ourNote.updatedAt < theirNote.updatedAt) {
+            if (ourNote == null || ourNote.version < theirNote.version) {
                 upsertLocal(theirNote);
             }
 
             try {
-                Log.i("SYNC", note.getValue().content + note.getValue().updatedAt); } catch (Exception e) {};
+                Log.i("SYNC", note.getValue().content + note.getValue().version); } catch (Exception e) {};
         };
 
 
@@ -83,7 +85,7 @@ public class NoteRepository {
     }
 
     public void upsertLocal(Note note) {
-        note.updatedAt = System.currentTimeMillis()/1000;
+        note.version = note.version + 1;
         dao.upsert(note);
     }
 
@@ -103,22 +105,21 @@ public class NoteRepository {
         // TODO: Set up polling background thread (MutableLiveData?)
         // TODO: Refer to TimerService from https://github.com/DylanLukes/CSE-110-WI23-Demo5-V2.
 
+        //Cancel previous poller if it exists.
+        if(this.future != null && !this.future.isCancelled()) {
+            future.cancel(true);
+        }
 
-//        if(future != null) {
-//            future.cancel(true);
-//        }
-
-        MutableLiveData<Note> curNote = new MutableLiveData<>();
+        MutableLiveData<Note> curNote = new MutableLiveData<Note>();
 
         ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
         this.future = executor.scheduleAtFixedRate(() -> {
-           curNote.postValue(noteAPI.getNote(title));
-           try{ Log.i("REPO", curNote.getValue().content + curNote.getValue().updatedAt); }
+            curNote.postValue(noteAPI.getNote(title)); //Changing
+
+            try{ Log.i("REPO", curNote.getValue().content + curNote.getValue().version); }
            catch(Exception e) {}
            }, 0, 3, TimeUnit.SECONDS);
 
-        //Log.i("REPO", "test");
-        //
 
         // Start by fetching the note from the server _once_ and feeding it into MutableLiveData.
         // Then, set up a background thread that will poll the server every 3 seconds.
@@ -136,9 +137,9 @@ public class NoteRepository {
        // LiveData<Note> curNote = this.getRemote(note.title);
        // if (curNote.getValue().toString().equals("Note not found.")) {
         if(note != null) {
-            if(note.updatedAt == 0){
-                note.updatedAt = System.currentTimeMillis()/1000; // Added to add timestamp to last update.
-            }
+//            if(note.updatedAt == 0){
+//                note.updatedAt = System.currentTimeMillis()/1000; // Added to add timestamp to last update.
+//            }
             noteAPI.putNote(note);
         }
         //} else
