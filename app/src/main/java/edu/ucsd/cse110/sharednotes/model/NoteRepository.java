@@ -86,7 +86,8 @@ public class NoteRepository {
 
     public void upsertLocal(Note note) {
         note.version = note.version + 1;
-        dao.upsert(note);
+        if (note.title != null)
+            dao.upsert(note);
     }
 
     public void deleteLocal(Note note) {
